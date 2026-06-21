@@ -1,18 +1,20 @@
 from flask import Flask, request, jsonify
-import pickle
-import pandas as pd
+import numpy as np
+import json
 from pathlib import Path
+import onnxruntime as ort
 
 app = Flask(__name__)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load model and threshold
-with open(BASE_DIR / "best_model_xgboost.pkl", "rb") as f:
-    model = pickle.load(f)
+# Load ONNX model
+session = ort.InferenceSession(str(BASE_DIR / "model.onnx"))
+input_name = session.get_inputs()[0].name
 
-with open(BASE_DIR / "best_threshold.pkl", "rb") as f:
-    threshold = pickle.load(f)
+# Load threshold
+with open(BASE_DIR / "threshold.json", "r") as f:
+    threshold = json.load(f)["threshold"]
 
 FEATURE_COLUMNS = [
     "Year", "Quarter", "Month", "DayofMonth", "DayOfWeek",
@@ -21,31 +23,38 @@ FEATURE_COLUMNS = [
     "Origin", "Dest", "Airline", "Operating_Airline"
 ]
 
+# IMPORTANT: You need the same encoding mappings used during training.
+# If you used Label Encoding or One-Hot Encoding, load those encoders
+# or recreate the mapping logic here. For now, this assumes numerical inputs.
+# If your model expects encoded categoricals, you'll need to add that logic.
+
 @app.route("/api/predict", methods=["POST"])
 def predict():
     try:
         data = request.get_json(force=True)
-        
         if not data:
             return jsonify({"error": "No JSON data provided"}), 400
 
-        df = pd.DataFrame([data])
-
-        # Add missing columns with None
+        # Build feature array in correct order
+        features = []
         for col in FEATURE_COLUMNS:
-            if col not in df.columns:
-                df[col] = None
+            val = data.get(col)
+            if val is None:
+                return jsonify({"error": f"Missing required field: {col}"}), 400
+            # Convert categorical strings to numeric if needed
+            # You'll need to add your encoding logic here
+            features.append(float(val))
 
-        df = df[FEATURE_COLUMNS]
+        # Reshape for ONNX: [batch_size, n_features]
+        input_array = np.array([features], dtype=np.float32)
 
-        # WARNING: If your model expects encoded categorical values,
-        # you MUST encode 'Origin', 'Dest', 'Airline', 'Operating_Airline'
-        # here before prediction. Raw strings will likely cause errors.
+        # Run inference
+        outputs = session.run(None, {input_name: input_array})
+        probability = float(outputs[1][0][1])  # probability of class 1 (delayed)
 
-        probability = float(model.predict_proba(df)[0][1])
         delayed = probability >= threshold
-        
         confidence_score = abs(probability - threshold)
+
         if confidence_score >= 0.30:
             confidence = "High"
         elif confidence_score >= 0.15:
@@ -61,8 +70,4 @@ def predict():
         })
 
     except Exception as e:
-        # In production, use proper logging instead of print
         return jsonify({"error": str(e)}), 500
-
-if __name__ == "__main__":
-    app.run(debug=True)
