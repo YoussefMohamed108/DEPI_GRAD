@@ -3,16 +3,15 @@ import pickle
 import pandas as pd
 from pathlib import Path
 
-app = Flask(__name__)
+app = Flask(__name__) 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 with open(BASE_DIR / "best_model_xgboost.pkl", "rb") as f:
-    model = pickle.load(f)
+model = pickle.load(f)
 
 with open(BASE_DIR / "best_threshold.pkl", "rb") as f:
-    threshold = pickle.load(f)
-
+threshold = pickle.load(f)
 
 FEATURE_COLUMNS = [
 "Year",
@@ -36,10 +35,8 @@ FEATURE_COLUMNS = [
 
 @app.route("/api/predict", methods=["POST"])
 def predict():
-    try:
-        data = request.get_json()
-
-
+try:
+data = request.get_json()
 
 ```
     df = pd.DataFrame([data])
