@@ -16,12 +16,18 @@ input_name = session.get_inputs()[0].name
 with open(BASE_DIR / "threshold.json", "r") as f:
     threshold = json.load(f)["threshold"]
 
+# Load encodings
+with open(BASE_DIR / "encodings.json", "r") as f:
+    ENCODINGS = json.load(f)
+
 FEATURE_COLUMNS = [
     "Year", "Quarter", "Month", "DayofMonth", "DayOfWeek",
     "WeekOfYear", "CRSDepTime", "CRSArrTime", "CRSElapsedTime",
     "Distance", "Cancelled", "Diverted", "DivAirportLandings",
     "Origin", "Dest", "Airline", "Operating_Airline"
 ]
+
+CATEGORICAL_COLS = ["Origin", "Dest", "Airline", "Operating_Airline"]
 
 @app.route("/", methods=["POST"])
 def predict():
@@ -35,6 +41,17 @@ def predict():
             val = data.get(col)
             if val is None:
                 return jsonify({"error": f"Missing required field: {col}"}), 400
+
+            # Encode categorical features
+            if col in CATEGORICAL_COLS:
+                mapping = ENCODINGS.get(col, {})
+                if str(val) not in mapping:
+                    valid = list(mapping.keys())[:5]
+                    return jsonify({
+                        "error": f"Unknown {col}: '{val}'. Valid examples: {valid}..."
+                    }), 400
+                val = mapping[str(val)]
+
             try:
                 features.append(float(val))
             except (ValueError, TypeError):
