@@ -585,26 +585,26 @@
           <label>Airline</label>
           <select id="Airline">
             <option value="">Select airline…</option>
-            <option>Alaska Airlines Inc.</option>
-            <option>Allegiant Air</option>
-            <option>American Airlines Inc.</option>
-            <option>Commutair Aka Champlain Enterprises, Inc.</option>
-            <option>Delta Air Lines Inc.</option>
-            <option>Endeavor Air Inc.</option>
-            <option>Envoy Air</option>
-            <option>Frontier Airlines Inc.</option>
-            <option>GoJet Airlines LLC d/b/a United Express</option>
-            <option>Hawaiian Airlines Inc.</option>
-            <option>Horizon Air</option>
-            <option>JetBlue Airways</option>
-            <option>Mesa Airlines Inc.</option>
-            <option>PSA Airlines Inc.</option>
-            <option>Republic Airlines</option>
-            <option>SkyWest Airlines Inc.</option>
-            <option>Southwest Airlines Co.</option>
-            <option>Spirit Air Lines</option>
-            <option>Sun Country Airlines d/b/a MN Airlines</option>
-            <option>United Air Lines Inc.</option>
+            <option value="0">Alaska Airlines Inc.</option>
+            <option value="1">Allegiant Air</option>
+            <option value="2">American Airlines Inc.</option>
+            <option value="3">Commutair Aka Champlain Enterprises, Inc.</option>
+            <option value="4">Delta Air Lines Inc.</option>
+            <option value="5">Endeavor Air Inc.</option>
+            <option value="6">Envoy Air</option>
+            <option value="7">Frontier Airlines Inc.</option>
+            <option value="8">GoJet Airlines LLC d/b/a United Express</option>
+            <option value="9">Hawaiian Airlines Inc.</option>
+            <option value="10">Horizon Air</option>
+            <option value="11">JetBlue Airways</option>
+            <option value="12">Mesa Airlines Inc.</option>
+            <option value="13">PSA Airlines Inc.</option>
+            <option value="14">Republic Airlines</option>
+            <option value="15">SkyWest Airlines Inc.</option>
+            <option value="16">Southwest Airlines Co.</option>
+            <option value="17">Spirit Air Lines</option>
+            <option value="18">Sun Country Airlines d/b/a MN Airlines</option>
+            <option value="19">United Air Lines Inc.</option>
           </select>
         </div>
 
@@ -612,26 +612,26 @@
           <label>Operating Airline (if different from marketing airline)</label>
           <select id="Operating_Airline">
             <option value="">Same as above</option>
-            <option>Alaska Airlines Inc.</option>
-            <option>Allegiant Air</option>
-            <option>American Airlines Inc.</option>
-            <option>Commutair Aka Champlain Enterprises, Inc.</option>
-            <option>Delta Air Lines Inc.</option>
-            <option>Endeavor Air Inc.</option>
-            <option>Envoy Air</option>
-            <option>Frontier Airlines Inc.</option>
-            <option>GoJet Airlines LLC d/b/a United Express</option>
-            <option>Hawaiian Airlines Inc.</option>
-            <option>Horizon Air</option>
-            <option>JetBlue Airways</option>
-            <option>Mesa Airlines Inc.</option>
-            <option>PSA Airlines Inc.</option>
-            <option>Republic Airlines</option>
-            <option>SkyWest Airlines Inc.</option>
-            <option>Southwest Airlines Co.</option>
-            <option>Spirit Air Lines</option>
-            <option>Sun Country Airlines d/b/a MN Airlines</option>
-            <option>United Air Lines Inc.</option>
+            <option value="0">Alaska Airlines Inc.</option>
+            <option value="1">Allegiant Air</option>
+            <option value="2">American Airlines Inc.</option>
+            <option value="3">Commutair Aka Champlain Enterprises, Inc.</option>
+            <option value="4">Delta Air Lines Inc.</option>
+            <option value="5">Endeavor Air Inc.</option>
+            <option value="6">Envoy Air</option>
+            <option value="7">Frontier Airlines Inc.</option>
+            <option value="8">GoJet Airlines LLC d/b/a United Express</option>
+            <option value="9">Hawaiian Airlines Inc.</option>
+            <option value="10">Horizon Air</option>
+            <option value="11">JetBlue Airways</option>
+            <option value="12">Mesa Airlines Inc.</option>
+            <option value="13">PSA Airlines Inc.</option>
+            <option value="14">Republic Airlines</option>
+            <option value="15">SkyWest Airlines Inc.</option>
+            <option value="16">Southwest Airlines Co.</option>
+            <option value="17">Spirit Air Lines</option>
+            <option value="18">Sun Country Airlines d/b/a MN Airlines</option>
+            <option value="19">United Air Lines Inc.</option>
           </select>
         </div>
 
@@ -740,6 +740,18 @@
 </footer>
 
 <script>
+  // ── Encoding mappings (must match your training pipeline) ──────
+  // These are example values — REPLACE with your actual encodings!
+  const AIRPORT_CODES = {
+    'JFK': 0, 'LAX': 1, 'ORD': 2, 'DFW': 3, 'DEN': 4,
+    'SFO': 5, 'SEA': 6, 'LAS': 7, 'ATL': 8, 'MIA': 9,
+    'BOS': 10, 'PHX': 11, 'IAH': 12, 'CLT': 13, 'EWR': 14,
+    'MCO': 15, 'DTW': 16, 'MSP': 17, 'PHL': 18, 'LGA': 19,
+    'BWI': 20, 'SLC': 21, 'SAN': 22, 'TPA': 23, 'AUS': 24,
+    'BNA': 25, 'MDW': 26, 'DAL': 27, 'HOU': 28, 'PDX': 29,
+    // Add ALL airports from your training data
+  };
+
   // ── State ──────────────────────────────────────────────────────
   let currentStep = 1;
   const TOTAL     = 3;
@@ -799,8 +811,12 @@
   function validateStep(n) {
     clearErr(n);
     if (n === 1) {
-      if (!v('Origin') || v('Origin').length !== 3) return showErr(1, 'Enter a valid 3-letter departure airport code (e.g. JFK).') || false;
-      if (!v('Dest')   || v('Dest').length !== 3)   return showErr(1, 'Enter a valid 3-letter arrival airport code (e.g. LAX).') || false;
+      const origin = v('Origin').toUpperCase();
+      const dest = v('Dest').toUpperCase();
+      if (!origin || origin.length !== 3) return showErr(1, 'Enter a valid 3-letter departure airport code (e.g. JFK).') || false;
+      if (!dest || dest.length !== 3)   return showErr(1, 'Enter a valid 3-letter arrival airport code (e.g. LAX).') || false;
+      if (!AIRPORT_CODES[origin]) return showErr(1, `Airport code ${origin} not recognized. Please use a valid IATA code.`) || false;
+      if (!AIRPORT_CODES[dest]) return showErr(1, `Airport code ${dest} not recognized. Please use a valid IATA code.`) || false;
       if (!v('FlightDate')) return showErr(1, 'Please select a flight date.') || false;
       if (!v('Airline'))    return showErr(1, 'Please select an airline.') || false;
     }
@@ -823,7 +839,7 @@
       { label: 'From',            val: v('Origin').toUpperCase() },
       { label: 'To',              val: v('Dest').toUpperCase() },
       { label: 'Date',            val: v('FlightDate') },
-      { label: 'Airline',         val: v('Airline') },
+      { label: 'Airline',         val: document.getElementById('Airline').selectedOptions[0].text },
       { label: 'Departure',       val: fmtTime(v('CRSDepTime')) },
       { label: 'Arrival',         val: fmtTime(v('CRSArrTime')) },
       { label: 'Flight Duration', val: v('CRSElapsedTime') + ' min' },
@@ -851,28 +867,33 @@
     if (!validateStep(3)) return;
 
     const date = new Date(v('FlightDate'));
-    const dow  = date.getDay(); // 0=Sun … shift: JS Sun=0, Python Mon=0
+    const dow  = date.getDay();
     const pythonDow = (dow + 6) % 7;
 
+    const originCode = v('Origin').toUpperCase();
+    const destCode = v('Dest').toUpperCase();
+
+    // IMPORTANT: Replace AIRPORT_CODES with your actual encoding mappings!
+    // These are placeholder values. The model was trained with specific numeric
+    // encodings for each airport. You MUST use those same values.
     const payload = {
-      Origin:             v('Origin').toUpperCase(),
-      Dest:               v('Dest').toUpperCase(),
-      FlightDate:         v('FlightDate'),
-      Airline:            v('Airline'),
-      Operating_Airline:  v('Operating_Airline') || v('Airline'),
-      CRSDepTime:         parseInt(v('CRSDepTime')),
-      CRSArrTime:         parseInt(v('CRSArrTime')),
-      CRSElapsedTime:     parseFloat(v('CRSElapsedTime')),
-      Distance:           parseFloat(v('Distance')),
       Year:               date.getFullYear(),
       Quarter:            Math.ceil((date.getMonth() + 1) / 3),
       Month:              date.getMonth() + 1,
       DayofMonth:         date.getDate(),
       DayOfWeek:          pythonDow,
       WeekOfYear:         getWeekOfYear(date),
+      CRSDepTime:         parseInt(v('CRSDepTime')),
+      CRSArrTime:         parseInt(v('CRSArrTime')),
+      CRSElapsedTime:     parseFloat(v('CRSElapsedTime')),
+      Distance:           parseFloat(v('Distance')),
       Cancelled:          0,
       Diverted:           0,
       DivAirportLandings: 0,
+      Origin:             AIRPORT_CODES[originCode] ?? 0,
+      Dest:               AIRPORT_CODES[destCode] ?? 0,
+      Airline:            parseInt(v('Airline')),
+      Operating_Airline:  parseInt(v('Operating_Airline') || v('Airline')),
     };
 
     // Show loading
@@ -882,11 +903,1004 @@
     clearErr(3);
 
     try {
-      const res  = await fetch('/api/predict', {
+      // FIX: Call /api (not /api/predict) since you renamed to api/index.py
+      const res  = await fetch('/api', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify(payload),
       });
+      
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Server error ${res.status}: ${text}`);
+      }
+      
+      const data = await res.json();
+
+      if (data.error) throw new Error(data.error);
+
+      showResult(data);
+    } catch (err) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('form-footer').style.display = 'flex';
+      showErr(3, `Prediction failed: ${err.message}`);
+    }
+  }
+
+  function showResult(data) {
+    document.getElementById('loading').style.display      = 'none';
+    document.getElementById('result-panel').style.display = 'block';
+
+    const delayed = data.delayed;
+    const prob    = data.probability;
+
+    document.getElementById('res-icon').textContent    = delayed ? '🔴' : '🟢';
+    document.getElementById('res-verdict').textContent = delayed ? 'Likely Delayed' : 'Likely On Time';
+    document.getElementById('res-verdict').className   = 'result-verdict ' + (delayed ? 'delayed' : 'on-time');
+    document.getElementById('res-sub').textContent     = `${prob}% delay probability`;
+
+    document.getElementById('res-prob').textContent      = `${prob}%`;
+    document.getElementById('res-conf').textContent      = data.confidence;
+    document.getElementById('res-threshold').textContent = `${data.threshold}%`;
+
+    const fill  = document.getElementById('gauge-fill');
+    fill.style.width      = '0%';
+    fill.style.background = delayed
+      ? 'linear-gradient(90deg,#f59e0b,#ef4444)'
+      : 'linear-gradient(90deg,#22c55e,#3b82f6)';
+    setTimeout(() => { fill.style.width = `${prob}%`; }, 50);
+
+    const badge = document.getElementById('conf-badge');
+    badge.textContent  = data.confidence;
+    badge.className    = `confidence-badge confidence-${data.confidence}`;
+  }
+
+  function resetForm() {
+    currentStep = 1;
+    renderStep();
+    document.getElementById('result-panel').style.display  = 'none';
+    document.getElementById('loading').style.display       = 'none';
+    document.getElementById('form-footer').style.display   = 'flex';
+  }
+
+  // ── Utilities ──────────────────────────────────────────────────
+  function v(id) {
+    return document.getElementById(id)?.value?.trim() ?? '';
+  }
+
+  function getWeekOfYear(date) {
+    const start = new Date(date.getFullYear(), 0, 1);
+    return Math.ceil(((date - start) / 86400000 + start.getDay() + 1) / 7);
+  }
+
+  // Auto-uppercase IATA inputs
+  ['Origin','Dest'].forEach(id => {
+    document.getElementById(id).addEventListener('input', e => {
+      e.target.value = e.target.value.toUpperCase();
+    });
+  });
+
+  // Set today's date as default
+  document.getElementById('FlightDate').value = new Date().toISOString().split('T')[0];
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FlightSense — Delay Predictor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    /* ── Reset & base ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0e1a;
+      --surface:   #111827;
+      --surface2:  #1a2235;
+      --border:    #1e2d45;
+      --accent:    #3b82f6;
+      --accent2:   #60a5fa;
+      --danger:    #ef4444;
+      --safe:      #22c55e;
+      --warn:      #f59e0b;
+      --text:      #f1f5f9;
+      --muted:     #64748b;
+      --mono:      'Space Mono', monospace;
+      --sans:      'Space Grotesk', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Grid background ──────────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(59,130,246,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59,130,246,.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Nav ──────────────────────────────────────────────────── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 40px;
+      background: rgba(10,14,26,.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--mono);
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-icon {
+      width: 32px; height: 32px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      font-size: 16px;
+    }
+
+    .nav-badge {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--accent2);
+      background: rgba(59,130,246,.12);
+      border: 1px solid rgba(59,130,246,.25);
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+
+    /* ── Hero ─────────────────────────────────────────────────── */
+    .hero {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 72px 24px 48px;
+    }
+
+    .hero-eyebrow {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 3px;
+      color: var(--accent2);
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.2rem, 5vw, 3.6rem);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -1.5px;
+      margin-bottom: 16px;
+    }
+
+    .hero h1 span {
+      background: linear-gradient(135deg, var(--accent), #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      color: var(--muted);
+      font-size: 1.05rem;
+      max-width: 480px;
+      margin: 0 auto;
+      line-height: 1.65;
+    }
+
+    /* ── Stats bar ────────────────────────────────────────────── */
+    .stats-bar {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      max-width: 680px;
+      margin: 0 auto 56px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--surface);
+    }
+
+    .stat {
+      flex: 1;
+      padding: 20px 24px;
+      text-align: center;
+      border-right: 1px solid var(--border);
+    }
+    .stat:last-child { border-right: none; }
+
+    .stat-val {
+      font-family: var(--mono);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent2);
+      display: block;
+    }
+
+    .stat-label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: .5px;
+      margin-top: 4px;
+      display: block;
+    }
+
+    /* ── Main card ────────────────────────────────────────────── */
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 28px 36px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+    }
+
+    .card-subtitle {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .step-indicator {
+      display: flex;
+      gap: 6px;
+    }
+
+    .step-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: background .3s;
+    }
+    .step-dot.active { background: var(--accent); }
+    .step-dot.done   { background: var(--safe); }
+
+    /* ── Form sections ────────────────────────────────────────── */
+    .form-section {
+      display: none;
+      padding: 32px 36px;
+      animation: fadeIn .25s ease;
+    }
+    .form-section.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-label {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 2px;
+      color: var(--accent2);
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    .span-2 { grid-column: span 2; }
+
+    .field { display: flex; flex-direction: column; gap: 7px; }
+
+    label {
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--muted);
+      letter-spacing: .3px;
+    }
+
+    input, select {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 0.92rem;
+      padding: 11px 14px;
+      width: 100%;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      appearance: none;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(59,130,246,.12);
+    }
+
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+    }
+
+    input::placeholder { color: var(--muted); opacity: .6; }
+
+    /* ── Form nav buttons ─────────────────────────────────────── */
+    .form-footer {
+      padding: 24px 36px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 24px;
+      border-radius: 10px;
+      font-family: var(--sans);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all .2s;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--text); }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { background: #2563eb; transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-predict {
+      background: linear-gradient(135deg, var(--accent), #7c3aed);
+      color: #fff;
+      padding: 13px 32px;
+      font-size: 1rem;
+    }
+    .btn-predict:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-predict:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    /* ── Result panel ─────────────────────────────────────────── */
+    #result-panel {
+      display: none;
+      padding: 36px;
+      border-top: 1px solid var(--border);
+      animation: fadeIn .4s ease;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .result-main {
+      background: var(--surface2);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      padding: 28px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .result-icon {
+      font-size: 3rem;
+      line-height: 1;
+    }
+
+    .result-verdict {
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .result-verdict.delayed  { color: var(--danger); }
+    .result-verdict.on-time  { color: var(--safe); }
+
+    .result-sub {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .result-details {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .detail-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+    }
+
+    .detail-label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: .5px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .detail-val {
+      font-family: var(--mono);
+      font-size: 1.35rem;
+      font-weight: 700;
+    }
+
+    /* Probability gauge */
+    .gauge-wrap {
+      margin-top: 4px;
+    }
+
+    .gauge-bar {
+      height: 8px;
+      background: var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .gauge-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 1s cubic-bezier(.4,0,.2,1);
+      width: 0%;
+    }
+
+    .confidence-badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-top: 8px;
+    }
+
+    .confidence-High   { background: rgba(34,197,94,.15);  color: var(--safe); }
+    .confidence-Medium { background: rgba(245,158,11,.15); color: var(--warn); }
+    .confidence-Low    { background: rgba(239,68,68,.15);  color: var(--danger); }
+
+    .result-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    /* ── Loading overlay ──────────────────────────────────────── */
+    #loading {
+      display: none;
+      padding: 48px 36px;
+      text-align: center;
+      border-top: 1px solid var(--border);
+    }
+
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-text {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    /* ── Error ────────────────────────────────────────────────── */
+    .error-msg {
+      display: none;
+      background: rgba(239,68,68,.08);
+      border: 1px solid rgba(239,68,68,.25);
+      border-radius: 10px;
+      padding: 14px 18px;
+      color: #fca5a5;
+      font-size: 0.85rem;
+      margin-top: 16px;
+    }
+
+    /* ── Footer ───────────────────────────────────────────────── */
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 24px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      border-top: 1px solid var(--border);
+    }
+
+    footer a { color: var(--accent2); text-decoration: none; }
+
+    /* ── Responsive ───────────────────────────────────────────── */
+    @media (max-width: 600px) {
+      nav { padding: 14px 20px; }
+      .hero { padding: 48px 20px 32px; }
+      .stats-bar { flex-direction: column; }
+      .stat { border-right: none; border-bottom: 1px solid var(--border); }
+      .stat:last-child { border-bottom: none; }
+      .card-header, .form-section, .form-footer, #result-panel { padding: 20px; }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .span-2 { grid-column: span 1; }
+      .result-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Nav ──────────────────────────────────────────────────────── -->
+<nav>
+  <div class="logo">
+    <div class="logo-icon">✈</div>
+    FlightSense
+  </div>
+  <span class="nav-badge">XGBoost · AUC 0.80+</span>
+</nav>
+
+<!-- ── Hero ─────────────────────────────────────────────────────── -->
+<section class="hero">
+  <p class="hero-eyebrow">AI-Powered Flight Intelligence</p>
+  <h1>Will your flight<br><span>leave on time?</span></h1>
+  <p>Enter your flight details below. Our XGBoost model — trained on 3.9M US domestic flights — predicts departure delays in seconds.</p>
+</section>
+
+<!-- ── Stats bar ─────────────────────────────────────────────────── -->
+<div class="stats-bar">
+  <div class="stat">
+    <span class="stat-val">3.9M</span>
+    <span class="stat-label">Flights trained on</span>
+  </div>
+  <div class="stat">
+    <span class="stat-val">0.80+</span>
+    <span class="stat-label">ROC-AUC score</span>
+  </div>
+  <div class="stat">
+    <span class="stat-val">21%</span>
+    <span class="stat-label">US flights delayed</span>
+  </div>
+  <div class="stat">
+    <span class="stat-val">2022</span>
+    <span class="stat-label">Dataset year</span>
+  </div>
+</div>
+
+<!-- ── Card ──────────────────────────────────────────────────────── -->
+<div class="container">
+  <div class="card">
+
+    <!-- Header -->
+    <div class="card-header">
+      <div>
+        <div class="card-title">Flight Details</div>
+        <div class="card-subtitle">Step <span id="step-label">1</span> of 3 — <span id="step-name">Route & Date</span></div>
+      </div>
+      <div class="step-indicator">
+        <div class="step-dot active" id="dot-1"></div>
+        <div class="step-dot"       id="dot-2"></div>
+        <div class="step-dot"       id="dot-3"></div>
+      </div>
+    </div>
+
+    <!-- ── Step 1: Route & Date ──────────────────────────────────── -->
+    <div class="form-section active" id="step-1">
+      <div class="section-label">Route & Date</div>
+      <div class="grid-2">
+
+        <div class="field">
+          <label>Departure Airport (IATA)</label>
+          <input id="Origin" placeholder="e.g. JFK" maxlength="3" style="text-transform:uppercase" />
+        </div>
+
+        <div class="field">
+          <label>Arrival Airport (IATA)</label>
+          <input id="Dest" placeholder="e.g. LAX" maxlength="3" style="text-transform:uppercase" />
+        </div>
+
+        <div class="field">
+          <label>Flight Date</label>
+          <input id="FlightDate" type="date" />
+        </div>
+
+        <div class="field">
+          <label>Airline</label>
+          <select id="Airline">
+            <option value="">Select airline…</option>
+            <option value="0">Alaska Airlines Inc.</option>
+            <option value="1">Allegiant Air</option>
+            <option value="2">American Airlines Inc.</option>
+            <option value="3">Commutair Aka Champlain Enterprises, Inc.</option>
+            <option value="4">Delta Air Lines Inc.</option>
+            <option value="5">Endeavor Air Inc.</option>
+            <option value="6">Envoy Air</option>
+            <option value="7">Frontier Airlines Inc.</option>
+            <option value="8">GoJet Airlines LLC d/b/a United Express</option>
+            <option value="9">Hawaiian Airlines Inc.</option>
+            <option value="10">Horizon Air</option>
+            <option value="11">JetBlue Airways</option>
+            <option value="12">Mesa Airlines Inc.</option>
+            <option value="13">PSA Airlines Inc.</option>
+            <option value="14">Republic Airlines</option>
+            <option value="15">SkyWest Airlines Inc.</option>
+            <option value="16">Southwest Airlines Co.</option>
+            <option value="17">Spirit Air Lines</option>
+            <option value="18">Sun Country Airlines d/b/a MN Airlines</option>
+            <option value="19">United Air Lines Inc.</option>
+          </select>
+        </div>
+
+        <div class="field span-2">
+          <label>Operating Airline (if different from marketing airline)</label>
+          <select id="Operating_Airline">
+            <option value="">Same as above</option>
+            <option value="0">Alaska Airlines Inc.</option>
+            <option value="1">Allegiant Air</option>
+            <option value="2">American Airlines Inc.</option>
+            <option value="3">Commutair Aka Champlain Enterprises, Inc.</option>
+            <option value="4">Delta Air Lines Inc.</option>
+            <option value="5">Endeavor Air Inc.</option>
+            <option value="6">Envoy Air</option>
+            <option value="7">Frontier Airlines Inc.</option>
+            <option value="8">GoJet Airlines LLC d/b/a United Express</option>
+            <option value="9">Hawaiian Airlines Inc.</option>
+            <option value="10">Horizon Air</option>
+            <option value="11">JetBlue Airways</option>
+            <option value="12">Mesa Airlines Inc.</option>
+            <option value="13">PSA Airlines Inc.</option>
+            <option value="14">Republic Airlines</option>
+            <option value="15">SkyWest Airlines Inc.</option>
+            <option value="16">Southwest Airlines Co.</option>
+            <option value="17">Spirit Air Lines</option>
+            <option value="18">Sun Country Airlines d/b/a MN Airlines</option>
+            <option value="19">United Air Lines Inc.</option>
+          </select>
+        </div>
+
+      </div>
+      <div class="error-msg" id="err-1"></div>
+    </div>
+
+    <!-- ── Step 2: Times & Distance ─────────────────────────────── -->
+    <div class="form-section" id="step-2">
+      <div class="section-label">Times & Distance</div>
+      <div class="grid-2">
+
+        <div class="field">
+          <label>Scheduled Departure Time (HHMM)</label>
+          <input id="CRSDepTime" type="number" placeholder="e.g. 1430 for 2:30 PM" min="0" max="2359" />
+        </div>
+
+        <div class="field">
+          <label>Scheduled Arrival Time (HHMM)</label>
+          <input id="CRSArrTime" type="number" placeholder="e.g. 1715 for 5:15 PM" min="0" max="2359" />
+        </div>
+
+        <div class="field">
+          <label>Scheduled Elapsed Time (minutes)</label>
+          <input id="CRSElapsedTime" type="number" placeholder="e.g. 165" min="10" max="900" />
+        </div>
+
+        <div class="field">
+          <label>Distance (miles)</label>
+          <input id="Distance" type="number" placeholder="e.g. 2475" min="10" max="6000" />
+        </div>
+
+      </div>
+      <div class="error-msg" id="err-2"></div>
+    </div>
+
+    <!-- ── Step 3: Review ────────────────────────────────────────── -->
+    <div class="form-section" id="step-3">
+      <div class="section-label">Review & Predict</div>
+      <div id="review-grid" class="grid-3" style="gap:12px; margin-bottom:8px;"></div>
+      <div class="error-msg" id="err-3"></div>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading">
+      <div class="spinner"></div>
+      <p class="loading-text">Analyzing flight data…</p>
+    </div>
+
+    <!-- Result -->
+    <div id="result-panel">
+      <div class="section-label">Prediction Result</div>
+      <div class="result-grid">
+
+        <div class="result-main" id="result-main">
+          <div class="result-icon" id="res-icon">✈️</div>
+          <div class="result-verdict" id="res-verdict">—</div>
+          <div class="result-sub"   id="res-sub">—</div>
+        </div>
+
+        <div class="result-details">
+          <div class="detail-card">
+            <div class="detail-label">Delay Probability</div>
+            <div class="detail-val" id="res-prob">—</div>
+            <div class="gauge-wrap">
+              <div class="gauge-bar">
+                <div class="gauge-fill" id="gauge-fill"></div>
+              </div>
+            </div>
+          </div>
+          <div class="detail-card">
+            <div class="detail-label">Model Confidence</div>
+            <div class="detail-val" id="res-conf">—</div>
+            <div><span class="confidence-badge" id="conf-badge">—</span></div>
+          </div>
+          <div class="detail-card">
+            <div class="detail-label">Decision Threshold</div>
+            <div class="detail-val" id="res-threshold">—</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="result-actions">
+        <button class="btn btn-ghost" onclick="resetForm()">← Predict Another Flight</button>
+      </div>
+    </div>
+
+    <!-- Footer nav -->
+    <div class="form-footer" id="form-footer">
+      <button class="btn btn-ghost" id="btn-back"  onclick="goBack()"  style="visibility:hidden">← Back</button>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button class="btn btn-primary"  id="btn-next"    onclick="goNext()">Next →</button>
+        <button class="btn btn-predict"  id="btn-predict" onclick="predict()" style="display:none">
+          ⚡ Predict Delay
+        </button>
+      </div>
+    </div>
+
+  </div><!-- .card -->
+</div><!-- .container -->
+
+<footer>
+  Built with XGBoost · Trained on <a href="https://www.kaggle.com/datasets/robikscube/flight-delay-dataset-20182022" target="_blank">BTS 2022 Flight Data</a>
+  · Deployed on Vercel
+</footer>
+
+<script>
+  // ── Encoding mappings (must match your training pipeline) ──────
+  // These are example values — REPLACE with your actual encodings!
+  const AIRPORT_CODES = {
+    'JFK': 0, 'LAX': 1, 'ORD': 2, 'DFW': 3, 'DEN': 4,
+    'SFO': 5, 'SEA': 6, 'LAS': 7, 'ATL': 8, 'MIA': 9,
+    'BOS': 10, 'PHX': 11, 'IAH': 12, 'CLT': 13, 'EWR': 14,
+    'MCO': 15, 'DTW': 16, 'MSP': 17, 'PHL': 18, 'LGA': 19,
+    'BWI': 20, 'SLC': 21, 'SAN': 22, 'TPA': 23, 'AUS': 24,
+    'BNA': 25, 'MDW': 26, 'DAL': 27, 'HOU': 28, 'PDX': 29,
+    // Add ALL airports from your training data
+  };
+
+  // ── State ──────────────────────────────────────────────────────
+  let currentStep = 1;
+  const TOTAL     = 3;
+
+  // ── Step navigation ────────────────────────────────────────────
+  function goNext() {
+    if (!validateStep(currentStep)) return;
+    if (currentStep < TOTAL) {
+      currentStep++;
+      renderStep();
+    }
+  }
+
+  function goBack() {
+    if (currentStep > 1) {
+      currentStep--;
+      renderStep();
+    }
+  }
+
+  function renderStep() {
+    // Sections
+    document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+    document.getElementById(`step-${currentStep}`).classList.add('active');
+
+    // Dots
+    for (let i = 1; i <= TOTAL; i++) {
+      const dot = document.getElementById(`dot-${i}`);
+      dot.className = 'step-dot' +
+        (i < currentStep ? ' done' : i === currentStep ? ' active' : '');
+    }
+
+    // Labels
+    const names = ['Route & Date', 'Times & Distance', 'Review & Predict'];
+    document.getElementById('step-label').textContent = currentStep;
+    document.getElementById('step-name').textContent  = names[currentStep - 1];
+
+    // Buttons
+    document.getElementById('btn-back').style.visibility = currentStep > 1 ? 'visible' : 'hidden';
+    document.getElementById('btn-next').style.display    = currentStep < TOTAL ? 'inline-flex' : 'none';
+    document.getElementById('btn-predict').style.display = currentStep === TOTAL ? 'inline-flex' : 'none';
+
+    // Build review on step 3
+    if (currentStep === TOTAL) buildReview();
+  }
+
+  // ── Validation ─────────────────────────────────────────────────
+  function showErr(stepN, msg) {
+    const el = document.getElementById(`err-${stepN}`);
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+  function clearErr(stepN) {
+    document.getElementById(`err-${stepN}`).style.display = 'none';
+  }
+
+  function validateStep(n) {
+    clearErr(n);
+    if (n === 1) {
+      const origin = v('Origin').toUpperCase();
+      const dest = v('Dest').toUpperCase();
+      if (!origin || origin.length !== 3) return showErr(1, 'Enter a valid 3-letter departure airport code (e.g. JFK).') || false;
+      if (!dest || dest.length !== 3)   return showErr(1, 'Enter a valid 3-letter arrival airport code (e.g. LAX).') || false;
+      if (!AIRPORT_CODES[origin]) return showErr(1, `Airport code ${origin} not recognized. Please use a valid IATA code.`) || false;
+      if (!AIRPORT_CODES[dest]) return showErr(1, `Airport code ${dest} not recognized. Please use a valid IATA code.`) || false;
+      if (!v('FlightDate')) return showErr(1, 'Please select a flight date.') || false;
+      if (!v('Airline'))    return showErr(1, 'Please select an airline.') || false;
+    }
+    if (n === 2) {
+      const dep = parseInt(v('CRSDepTime'));
+      const arr = parseInt(v('CRSArrTime'));
+      const ela = parseInt(v('CRSElapsedTime'));
+      const dis = parseFloat(v('Distance'));
+      if (isNaN(dep) || dep < 0 || dep > 2359) return showErr(2, 'Enter a valid departure time in HHMM format (0000–2359).') || false;
+      if (isNaN(arr) || arr < 0 || arr > 2359) return showErr(2, 'Enter a valid arrival time in HHMM format (0000–2359).') || false;
+      if (isNaN(ela) || ela < 10)              return showErr(2, 'Enter a valid elapsed flight time in minutes.') || false;
+      if (isNaN(dis) || dis < 10)              return showErr(2, 'Enter a valid flight distance in miles.') || false;
+    }
+    return true;
+  }
+
+  // ── Review panel ───────────────────────────────────────────────
+  function buildReview() {
+    const fields = [
+      { label: 'From',            val: v('Origin').toUpperCase() },
+      { label: 'To',              val: v('Dest').toUpperCase() },
+      { label: 'Date',            val: v('FlightDate') },
+      { label: 'Airline',         val: document.getElementById('Airline').selectedOptions[0].text },
+      { label: 'Departure',       val: fmtTime(v('CRSDepTime')) },
+      { label: 'Arrival',         val: fmtTime(v('CRSArrTime')) },
+      { label: 'Flight Duration', val: v('CRSElapsedTime') + ' min' },
+      { label: 'Distance',        val: Number(v('Distance')).toLocaleString() + ' mi' },
+    ];
+    document.getElementById('review-grid').innerHTML = fields.map(f => `
+      <div class="detail-card">
+        <div class="detail-label">${f.label}</div>
+        <div style="font-size:.95rem;font-weight:600;margin-top:4px;word-break:break-word">${f.val}</div>
+      </div>
+    `).join('');
+  }
+
+  function fmtTime(hhmm) {
+    if (!hhmm) return '—';
+    const n = String(hhmm).padStart(4, '0');
+    const h = parseInt(n.slice(0,2));
+    const m = n.slice(2);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    return `${h % 12 || 12}:${m} ${ampm}`;
+  }
+
+  // ── Predict ────────────────────────────────────────────────────
+  async function predict() {
+    if (!validateStep(3)) return;
+
+    const date = new Date(v('FlightDate'));
+    const dow  = date.getDay();
+    const pythonDow = (dow + 6) % 7;
+
+    const originCode = v('Origin').toUpperCase();
+    const destCode = v('Dest').toUpperCase();
+
+    // IMPORTANT: Replace AIRPORT_CODES with your actual encoding mappings!
+    // These are placeholder values. The model was trained with specific numeric
+    // encodings for each airport. You MUST use those same values.
+    const payload = {
+      Year:               date.getFullYear(),
+      Quarter:            Math.ceil((date.getMonth() + 1) / 3),
+      Month:              date.getMonth() + 1,
+      DayofMonth:         date.getDate(),
+      DayOfWeek:          pythonDow,
+      WeekOfYear:         getWeekOfYear(date),
+      CRSDepTime:         parseInt(v('CRSDepTime')),
+      CRSArrTime:         parseInt(v('CRSArrTime')),
+      CRSElapsedTime:     parseFloat(v('CRSElapsedTime')),
+      Distance:           parseFloat(v('Distance')),
+      Cancelled:          0,
+      Diverted:           0,
+      DivAirportLandings: 0,
+      Origin:             AIRPORT_CODES[originCode] ?? 0,
+      Dest:               AIRPORT_CODES[destCode] ?? 0,
+      Airline:            parseInt(v('Airline')),
+      Operating_Airline:  parseInt(v('Operating_Airline') || v('Airline')),
+    };
+
+    // Show loading
+    document.getElementById('form-footer').style.display = 'none';
+    document.getElementById('loading').style.display     = 'block';
+    document.getElementById('result-panel').style.display = 'none';
+    clearErr(3);
+
+    try {
+      // FIX: Call /api (not /api/predict) since you renamed to api/index.py
+      const res  = await fetch('/api', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload),
+      });
+      
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Server error ${res.status}: ${text}`);
+      }
+      
       const data = await res.json();
 
       if (data.error) throw new Error(data.error);
