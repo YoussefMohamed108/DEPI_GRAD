@@ -6,7 +6,6 @@ import onnxruntime as ort
 
 app = Flask(__name__)
 
-# FIX: index.py is inside /api/, so parent is project root
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load ONNX model
@@ -24,7 +23,7 @@ FEATURE_COLUMNS = [
     "Origin", "Dest", "Airline", "Operating_Airline"
 ]
 
-@app.route("/", methods=["POST"])  # ← Vercel maps /api to this root
+@app.route("/", methods=["POST"])
 def predict():
     try:
         data = request.get_json(force=True)
@@ -36,7 +35,10 @@ def predict():
             val = data.get(col)
             if val is None:
                 return jsonify({"error": f"Missing required field: {col}"}), 400
-            features.append(float(val))
+            try:
+                features.append(float(val))
+            except (ValueError, TypeError):
+                return jsonify({"error": f"Field '{col}' must be numeric, got: {val}"}), 400
 
         input_array = np.array([features], dtype=np.float32)
         outputs = session.run(None, {input_name: input_array})
