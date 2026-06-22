@@ -6,6 +6,7 @@ import onnxruntime as ort
 
 app = Flask(__name__)
 
+# FIX: index.py is inside /api/, so parent is project root
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load ONNX model
@@ -23,34 +24,23 @@ FEATURE_COLUMNS = [
     "Origin", "Dest", "Airline", "Operating_Airline"
 ]
 
-# IMPORTANT: You need the same encoding mappings used during training.
-# If you used Label Encoding or One-Hot Encoding, load those encoders
-# or recreate the mapping logic here. For now, this assumes numerical inputs.
-# If your model expects encoded categoricals, you'll need to add that logic.
-
-@app.route("/api/predict", methods=["POST"])
+@app.route("/", methods=["POST"])  # ← Vercel maps /api to this root
 def predict():
     try:
         data = request.get_json(force=True)
         if not data:
             return jsonify({"error": "No JSON data provided"}), 400
 
-        # Build feature array in correct order
         features = []
         for col in FEATURE_COLUMNS:
             val = data.get(col)
             if val is None:
                 return jsonify({"error": f"Missing required field: {col}"}), 400
-            # Convert categorical strings to numeric if needed
-            # You'll need to add your encoding logic here
             features.append(float(val))
 
-        # Reshape for ONNX: [batch_size, n_features]
         input_array = np.array([features], dtype=np.float32)
-
-        # Run inference
         outputs = session.run(None, {input_name: input_array})
-        probability = float(outputs[1][0][1])  # probability of class 1 (delayed)
+        probability = float(outputs[1][0][1])
 
         delayed = probability >= threshold
         confidence_score = abs(probability - threshold)
