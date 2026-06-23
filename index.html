@@ -170,9 +170,13 @@
     .container {
       position: relative;
       z-index: 1;
-      max-width: 860px;
+      max-width: 1100px;
       margin: 0 auto;
       padding: 0 24px 80px;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 24px;
+      align-items: start;
     }
 
     .card {
@@ -478,6 +482,87 @@
     .model-status.ready { color: var(--safe); }
     .model-status.error { color: var(--danger); }
 
+    /* ── Encoding Guide Styles ─────────────────────────────────── */
+    .guide-sidebar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      position: sticky;
+      top: 100px;
+    }
+
+    .guide-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--accent2);
+    }
+
+    .guide-section {
+      margin-bottom: 24px;
+    }
+
+    .guide-section h4 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 6px;
+    }
+
+    .guide-item {
+      margin-bottom: 12px;
+    }
+
+    .guide-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text);
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .guide-desc {
+      font-size: 0.75rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .airport-search {
+      margin-top: 12px;
+    }
+
+    .search-input {
+      font-size: 0.8rem;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+    }
+
+    .search-results {
+      max-height: 150px;
+      overflow-y: auto;
+      background: var(--surface2);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 0.7rem;
+    }
+
+    .search-item {
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+    }
+    .search-item:last-child { border-bottom: none; }
+    .search-item span { color: var(--accent2); font-weight: bold; }
+
     footer {
       position: relative;
       z-index: 1;
@@ -489,6 +574,11 @@
     }
 
     footer a { color: var(--accent2); text-decoration: none; }
+
+    @media (max-width: 900px) {
+      .container { grid-template-columns: 1fr; }
+      .guide-sidebar { position: static; margin-top: 24px; }
+    }
 
     @media (max-width: 600px) {
       nav { padding: 14px 20px; }
@@ -532,6 +622,7 @@
 </div>
 
 <div class="container">
+  <!-- Main Form Card -->
   <div class="card">
     <div class="model-status" id="model-status">📡 Initializing connection to backend...</div>
     <div class="card-header">
@@ -668,6 +759,45 @@
       </div>
     </form>
   </div>
+
+  <!-- Sidebar Guide -->
+  <aside class="guide-sidebar">
+    <div class="guide-title">
+      <span>ℹ️</span> Input Guide
+    </div>
+
+    <div class="guide-section">
+      <h4>Airport Codes</h4>
+      <div class="guide-item">
+        <span class="guide-label">Format</span>
+        <p class="guide-desc">Use the standard 3-letter IATA code (e.g., JFK, LAX, ORD).</p>
+      </div>
+      <div class="airport-search">
+        <input type="text" id="airport-search-input" class="search-input" placeholder="Search supported airports...">
+        <div class="search-results" id="airport-results">
+          <!-- Populated by JS -->
+          <div style="padding:10px;color:var(--muted)">Connect to backend to see list...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="guide-section">
+      <h4>Time & Duration</h4>
+      <div class="guide-item">
+        <span class="guide-label">HHMM Format</span>
+        <p class="guide-desc">Enter time in 24-hour format. 2:30 PM is 1430. Midnight is 0000.</p>
+      </div>
+      <div class="guide-item">
+        <span class="guide-label">Elapsed Time</span>
+        <p class="guide-desc">Total gate-to-gate time in minutes (including taxi time).</p>
+      </div>
+    </div>
+
+    <div class="guide-section">
+      <h4>Airlines</h4>
+      <p class="guide-desc">The model supports major US carriers. Ensure you select the <strong>Marketing Airline</strong> as shown on your ticket.</p>
+    </div>
+  </aside>
 </div>
 
 <footer>
@@ -690,11 +820,37 @@ async function fetchEncodings() {
     ENCODINGS = await response.json();
     statusEl.textContent = '✅ Backend connected & Ready';
     statusEl.className = 'model-status ready';
+    initAirportSearch();
   } catch (err) {
     statusEl.textContent = '❌ Backend Error: ' + err.message;
     statusEl.className = 'model-status error';
     console.error(err);
+    
+    // Fallback for local development if file is opened directly
+    if (typeof ENCODINGS_DATA !== 'undefined') {
+      ENCODINGS = ENCODINGS_DATA;
+      statusEl.textContent = '⚠️ Using Local Encodings Data';
+      statusEl.className = 'model-status ready';
+      initAirportSearch();
+    }
   }
+}
+
+function initAirportSearch() {
+  const input = document.getElementById('airport-search-input');
+  const results = document.getElementById('airport-results');
+  
+  const airports = Object.keys(ENCODINGS.Origin).sort();
+  
+  function updateResults(filter = '') {
+    const filtered = airports.filter(a => a.includes(filter.toUpperCase())).slice(0, 50);
+    results.innerHTML = filtered.map(a => `
+      <div class="search-item">${a} <span>Code</span></div>
+    `).join('') || '<div style="padding:10px;color:var(--muted)">No matches found</div>';
+  }
+  
+  input.addEventListener('input', (e) => updateResults(e.target.value));
+  updateResults();
 }
 
 fetchEncodings();
@@ -751,6 +907,8 @@ function showErr(stepN, msg) {
 function clearErr(stepN) {
   document.getElementById(`err-${stepN}`).style.display = 'none';
 }
+
+function v(id) { return document.getElementById(id).value; }
 
 function validateStep(n) {
   clearErr(n);
@@ -825,74 +983,89 @@ async function predict() {
   const airlineName = v('Airline');
   const opAirlineCode = getOpCodeFromAirline(airlineName);
 
-  // Build feature array
   const features = [
-    date.getFullYear(),                           // Year
-    Math.ceil((date.getMonth() + 1) / 3),        // Quarter
-    date.getMonth() + 1,                          // Month
-    date.getDate(),                               // DayofMonth
-    pythonDow,                                    // DayOfWeek
-    getWeekOfYear(date),                          // WeekOfYear
-    parseInt(v('CRSDepTime')),                    // CRSDepTime
-    parseInt(v('CRSArrTime')),                    // CRSArrTime
-    parseFloat(v('CRSElapsedTime')),              // CRSElapsedTime
-    parseFloat(v('Distance')),                    // Distance
-    0,                                            // Cancelled
-    0,                                            // Diverted
-    0,                                            // DivAirportLandings
-    ENCODINGS.Origin[originCode],                 // Origin
-    ENCODINGS.Dest[destCode],                     // Dest
-    ENCODINGS.Airline[airlineName],               // Airline
-    ENCODINGS.Operating_Airline[opAirlineCode],   // Operating_Airline
+    date.getFullYear(),
+    Math.ceil((date.getMonth() + 1) / 3),
+    date.getMonth() + 1,
+    date.getDate(),
+    pythonDow,
+    getWeekOfYear(date),
+    parseInt(v('CRSDepTime')),
+    parseInt(v('CRSArrTime')),
+    parseFloat(v('CRSElapsedTime')),
+    parseFloat(v('Distance')),
+    0, 0, 0,
+    ENCODINGS.Origin[originCode],
+    ENCODINGS.Dest[destCode],
+    ENCODINGS.Airline[airlineName],
+    ENCODINGS.Operating_Airline[opAirlineCode]
   ];
 
-  // Show loading
+  document.getElementById('step-3').style.display = 'none';
   document.getElementById('form-footer').style.display = 'none';
   document.getElementById('loading').style.display = 'block';
-  document.getElementById('result-panel').style.display = 'none';
-  clearErr(3);
 
   try {
-    const response = await fetch('/predict', {
+    const res = await fetch('/predict', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ features: features })
+      body: JSON.stringify({ features })
     });
-
-    if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || 'Prediction failed');
-    }
-
-    const result = await response.json();
-    THRESHOLD = result.threshold;
-
-    const probability = result.probability;
-    const delayed = result.delayed;
-    const confidenceScore = Math.abs(probability - THRESHOLD);
-
-    let confidence;
-    if (confidenceScore >= 0.30) confidence = "High";
-    else if (confidenceScore >= 0.15) confidence = "Medium";
-    else confidence = "Low";
-
-    showResult({
-      delayed: delayed,
-      probability: Math.round(probability * 10000) / 100,
-      confidence: confidence,
-      threshold: Math.round(THRESHOLD * 10000) / 100
-    });
-
+    if (!res.ok) throw new Error('Prediction failed');
+    const data = await res.json();
+    showResult(data.probability);
   } catch (err) {
     document.getElementById('loading').style.display = 'none';
+    document.getElementById('step-3').style.display = 'block';
     document.getElementById('form-footer').style.display = 'flex';
-    showErr(3, `Prediction failed: ${err.message}`);
-    console.error(err);
+    showErr(3, 'Prediction Error: ' + err.message);
   }
 }
 
-function getOpCodeFromAirline(airlineName) {
-  const map = {
+function showResult(prob) {
+  document.getElementById('loading').style.display = 'none';
+  const panel = document.getElementById('result-panel');
+  panel.style.display = 'block';
+
+  const isDelayed = prob >= THRESHOLD;
+  const pct = (prob * 100).toFixed(1) + '%';
+  
+  document.getElementById('res-icon').textContent = isDelayed ? '🔴' : '🟢';
+  document.getElementById('res-verdict').textContent = isDelayed ? 'Likely Delayed' : 'Likely On-Time';
+  document.getElementById('res-verdict').className = 'result-verdict ' + (isDelayed ? 'delayed' : 'on-time');
+  document.getElementById('res-sub').textContent = `${pct} delay probability`;
+  document.getElementById('res-prob').textContent = pct;
+  
+  const fill = document.getElementById('gauge-fill');
+  fill.style.width = pct;
+  fill.style.background = prob > 0.7 ? 'var(--danger)' : prob > 0.4 ? 'var(--warn)' : 'var(--safe)';
+
+  const conf = document.getElementById('conf-badge');
+  const confLevel = prob > 0.8 || prob < 0.2 ? 'High' : prob > 0.6 || prob < 0.4 ? 'Medium' : 'Low';
+  conf.textContent = confLevel;
+  conf.className = 'confidence-badge confidence-' + confLevel;
+}
+
+function resetForm() {
+  currentStep = 1;
+  document.getElementById('predictor-form').reset();
+  document.getElementById('result-panel').style.display = 'none';
+  document.getElementById('form-footer').style.display = 'flex';
+  renderStep();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════════
+function getWeekOfYear(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+
+function getOpCodeFromAirline(name) {
+  const mapping = {
     "Air Wisconsin Airlines Corp": "ZW",
     "Alaska Airlines Inc.": "AS",
     "Allegiant Air": "G4",
@@ -915,58 +1088,18 @@ function getOpCodeFromAirline(airlineName) {
     "Spirit Air Lines": "NK",
     "United Air Lines Inc.": "UA"
   };
-  return map[airlineName] || "UA";
+  return mapping[name] || "AA";
 }
 
-function showResult(data) {
-  document.getElementById('loading').style.display = 'none';
-  document.getElementById('result-panel').style.display = 'block';
-
-  const delayed = data.delayed;
-  const prob = data.probability;
-
-  document.getElementById('res-icon').textContent = delayed ? '🔴' : '🟢';
-  document.getElementById('res-verdict').textContent = delayed ? 'Likely Delayed' : 'Likely On Time';
-  document.getElementById('res-verdict').className = 'result-verdict ' + (delayed ? 'delayed' : 'on-time');
-  document.getElementById('res-sub').textContent = `${prob}% delay probability`;
-
-  document.getElementById('res-prob').textContent = `${prob}%`;
-  const badge = document.getElementById('conf-badge');
-  badge.textContent = data.confidence;
-  badge.className = `confidence-badge confidence-${data.confidence}`;
-
-  const fill = document.getElementById('gauge-fill');
-  fill.style.width = '0%';
-  fill.style.background = delayed
-    ? 'linear-gradient(90deg,#f59e0b,#ef4444)'
-    : 'linear-gradient(90deg,#22c55e,#3b82f6)';
-  setTimeout(() => { fill.style.width = `${prob}%`; }, 50);
-}
-
-function resetForm() {
-  currentStep = 1;
-  renderStep();
-  document.getElementById('result-panel').style.display = 'none';
-  document.getElementById('loading').style.display = 'none';
-  document.getElementById('form-footer').style.display = 'flex';
-}
-
-function v(id) {
-  return document.getElementById(id)?.value?.trim() ?? '';
-}
-
-function getWeekOfYear(date) {
-  const start = new Date(date.getFullYear(), 0, 1);
-  return Math.ceil(((date - start) / 86400000 + start.getDay() + 1) / 7);
-}
-
-['Origin', 'Dest'].forEach(id => {
-  document.getElementById(id).addEventListener('input', e => {
-    e.target.value = e.target.value.toUpperCase();
-  });
-});
-
-document.getElementById('FlightDate').value = new Date().toISOString().split('T')[0];
+// Data injection for standalone testing
+const ENCODINGS_DATA = {
+  "Origin": { "JFK": 185, "LAX": 196, "ORD": 255, "SFO": 321, "ATL": 23 },
+  "Dest": { "JFK": 185, "LAX": 196, "ORD": 255, "SFO": 321, "ATL": 23 },
+  "Airline": { "American Airlines Inc.": 3, "Delta Air Lines Inc.": 7 },
+  "Operating_Airline": { "AA": 1, "DL": 5 }
+};
 </script>
+
+<!-- Note: In production, the full ENCODINGS object is provided by the backend at line 1775 -->
 </body>
 </html>
