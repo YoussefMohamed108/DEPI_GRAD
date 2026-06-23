@@ -559,7 +559,9 @@
       border-bottom: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
+      cursor: pointer;
     }
+    .search-item:hover { background: rgba(59,130,246,.1); }
     .search-item:last-child { border-bottom: none; }
     .search-item span { color: var(--accent2); font-weight: bold; }
 
@@ -840,17 +842,32 @@ function initAirportSearch() {
   const input = document.getElementById('airport-search-input');
   const results = document.getElementById('airport-results');
   
+  // Use Origin as the primary list of airports
   const airports = Object.keys(ENCODINGS.Origin).sort();
   
   function updateResults(filter = '') {
     const filtered = airports.filter(a => a.includes(filter.toUpperCase())).slice(0, 50);
     results.innerHTML = filtered.map(a => `
-      <div class="search-item">${a} <span>Code</span></div>
+      <div class="search-item" onclick="selectAirport('${a}')">${a} <span>Code</span></div>
     `).join('') || '<div style="padding:10px;color:var(--muted)">No matches found</div>';
   }
   
   input.addEventListener('input', (e) => updateResults(e.target.value));
   updateResults();
+}
+
+function selectAirport(code) {
+  const origin = document.getElementById('Origin');
+  const dest = document.getElementById('Dest');
+  
+  // Fill the first empty one, or origin if both empty/filled
+  if (!origin.value) {
+    origin.value = code;
+  } else if (!dest.value) {
+    dest.value = code;
+  } else {
+    origin.value = code;
+  }
 }
 
 fetchEncodings();
@@ -915,12 +932,12 @@ function validateStep(n) {
   if (!ENCODINGS) return showErr(n, 'Waiting for backend connection...') || false;
 
   if (n === 1) {
-    const origin = v('Origin').toUpperCase();
-    const dest = v('Dest').toUpperCase();
+    const origin = v('Origin').trim().toUpperCase();
+    const dest = v('Dest').trim().toUpperCase();
     if (!origin || origin.length !== 3) return showErr(1, 'Enter a valid 3-letter departure airport code (e.g. JFK).') || false;
     if (!dest || dest.length !== 3) return showErr(1, 'Enter a valid 3-letter arrival airport code (e.g. LAX).') || false;
-    if (!ENCODINGS.Origin[origin]) return showErr(1, `Airport code ${origin} not recognized.`) || false;
-    if (!ENCODINGS.Dest[dest]) return showErr(1, `Airport code ${dest} not recognized.`) || false;
+    if (ENCODINGS.Origin[origin] === undefined) return showErr(1, `Airport code ${origin} not recognized.`) || false;
+    if (ENCODINGS.Dest[dest] === undefined) return showErr(1, `Airport code ${dest} not recognized.`) || false;
     if (!v('FlightDate')) return showErr(1, 'Please select a flight date.') || false;
     if (!v('Airline')) return showErr(1, 'Please select an airline.') || false;
   }
@@ -1093,13 +1110,13 @@ function getOpCodeFromAirline(name) {
 
 // Data injection for standalone testing
 const ENCODINGS_DATA = {
-  "Origin": { "JFK": 185, "LAX": 196, "ORD": 255, "SFO": 321, "ATL": 23 },
-  "Dest": { "JFK": 185, "LAX": 196, "ORD": 255, "SFO": 321, "ATL": 23 },
+  "Origin": { "ABE": 0, "ABI": 1, "ABQ": 2, "JFK": 185, "LAX": 196, "ORD": 255, "SFO": 321, "ATL": 23 },
+  "Dest": { "ABE": 0, "ABI": 1, "ABQ": 2, "JFK": 185, "LAX": 196, "ORD": 255, "SFO": 321, "ATL": 23 },
   "Airline": { "American Airlines Inc.": 3, "Delta Air Lines Inc.": 7 },
   "Operating_Airline": { "AA": 1, "DL": 5 }
 };
 </script>
 
-<!-- Note: In production, the full ENCODINGS object is provided by the backend at line 1775 -->
+<!-- Note: In production, the full ENCODINGS object is provided by the backend -->
 </body>
 </html>
