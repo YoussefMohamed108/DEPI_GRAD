@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    /* ── Reset & base ─────────────────────────────────────────── */
+    /* Reset & base */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -700,8 +700,8 @@
             <input type="number" id="CRSArrTime" placeholder="e.g. 1745">
           </div>
           <div class="field">
-            <label for="CRSElapsedTime">Duration (Minutes)</label>
-            <input type="number" id="CRSElapsedTime" placeholder="e.g. 315">
+            <label for="CRSElapsedTime">Duration (Minutes) — auto-calculated</label>
+            <input type="number" id="CRSElapsedTime" placeholder="e.g. 315" readonly style="opacity:.75;cursor:not-allowed">
           </div>
           <div class="field">
             <label for="Distance">Distance (Miles)</label>
@@ -808,9 +808,9 @@
 </footer>
 
 <script>
-// ═══════════════════════════════════════════════════════════════════
+
 // CONFIG & ENCODINGS
-// ═══════════════════════════════════════════════════════════════════
+
 let ENCODINGS = null;
 let THRESHOLD = 0.5;
 
@@ -872,9 +872,56 @@ function selectAirport(code) {
 
 fetchEncodings();
 
-// ═══════════════════════════════════════════════════════════════════
+
+// AUTO-CALCULATE FLIGHT DURATION FROM DEP/ARR TIMES
+
+function calcDuration() {
+  const depEl = document.getElementById('CRSDepTime');
+  const arrEl = document.getElementById('CRSArrTime');
+  const durEl = document.getElementById('CRSElapsedTime');
+
+  const depRaw = depEl.value;
+  const arrRaw = arrEl.value;
+
+  if (depRaw === '' || arrRaw === '') {
+    durEl.value = '';
+    return;
+  }
+
+  const dep = parseInt(depRaw, 10);
+  const arr = parseInt(arrRaw, 10);
+
+  // Validate HHMM range (0000-2359, minutes 00-59)
+  const isValidHHMM = (t) => {
+    if (isNaN(t) || t < 0 || t > 2359) return false;
+    const mins = t % 100;
+    return mins >= 0 && mins <= 59;
+  };
+
+  if (!isValidHHMM(dep) || !isValidHHMM(arr)) {
+    durEl.value = '';
+    return;
+  }
+
+  const depMinutes = Math.floor(dep / 100) * 60 + (dep % 100);
+  const arrMinutes = Math.floor(arr / 100) * 60 + (arr % 100);
+
+  // Assume arrival is on the same day unless the time appears earlier
+  // than departure, in which case treat it as landing the next day
+  // (accounts for overnight/red-eye flights).
+  let diff = arrMinutes - depMinutes;
+  if (diff <= 0) diff += 24 * 60;
+
+  durEl.value = diff;
+}
+
+['CRSDepTime', 'CRSArrTime'].forEach(id => {
+  document.getElementById(id).addEventListener('input', calcDuration);
+});
+
+
 // STATE & NAVIGATION
-// ═══════════════════════════════════════════════════════════════════
+
 let currentStep = 1;
 const TOTAL = 3;
 
@@ -913,9 +960,9 @@ function renderStep() {
   if (currentStep === TOTAL) buildReview();
 }
 
-// ═══════════════════════════════════════════════════════════════════
+
 // VALIDATION
-// ═══════════════════════════════════════════════════════════════════
+
 function showErr(stepN, msg) {
   const el = document.getElementById(`err-${stepN}`);
   el.textContent = msg;
@@ -942,6 +989,7 @@ function validateStep(n) {
     if (!v('Airline')) return showErr(1, 'Please select an airline.') || false;
   }
   if (n === 2) {
+    calcDuration();
     const dep = parseInt(v('CRSDepTime'));
     const arr = parseInt(v('CRSArrTime'));
     const ela = parseInt(v('CRSElapsedTime'));
@@ -954,9 +1002,8 @@ function validateStep(n) {
   return true;
 }
 
-// ═══════════════════════════════════════════════════════════════════
+
 // REVIEW
-// ═══════════════════════════════════════════════════════════════════
 function buildReview() {
   const fields = [
     { label: 'From', val: v('Origin').toUpperCase() },
@@ -985,9 +1032,9 @@ function fmtTime(hhmm) {
   return `${h % 12 || 12}:${m} ${ampm}`;
 }
 
-// ═══════════════════════════════════════════════════════════════════
+
 // PREDICT (Backend API Call)
-// ═══════════════════════════════════════════════════════════════════
+
 async function predict() {
   if (!validateStep(3)) return;
 
@@ -1071,9 +1118,9 @@ function resetForm() {
   renderStep();
 }
 
-// ═══════════════════════════════════════════════════════════════════
+
 // HELPERS
-// ═══════════════════════════════════════════════════════════════════
+
 function getWeekOfYear(date) {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
